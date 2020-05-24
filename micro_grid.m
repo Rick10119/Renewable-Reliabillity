@@ -31,7 +31,6 @@ P_u = sdpvar(TIME,1,'full');                                                % 热
 P_z = binvar(TIME,1,'full');                                                % 储能充电/放电决策
 P_C = sdpvar(TIME,1,'full');                                                % 储能充电功率 MW
 P_D = sdpvar(TIME,1,'full');                                                % 储能放电功率 MW
-EDNS = sdpvar(TIME,1,'full');                                                % 电力不足期望
 
 %% 约束设置
 Constraints = [];
@@ -48,7 +47,6 @@ for i=1:TIME
     Constraints = [Constraints,0 <= P_w(i) <= P_w_max(i)];              %风电出力约束
     Constraints = [Constraints,0 <= P_p(i) <= P_p_max(i)];              %光伏出力约束
     Constraints = [Constraints, P_ld(i) + P_C(i)- P_w(i) - P_p(i) - P_u(i) -P_D(i) >=0];%功率平衡
-%     Constraints = [Constraints, 0 <= EDNS(k)];
 end
 
 %% 目标函数

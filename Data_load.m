@@ -26,8 +26,8 @@ Data=[
 1625 	1350 
 ]/4;
 
-P_ld = Data(:,1);
-t = 4*(1:24);
+P_ld = [Data(1);Data(:,1)];
+t = 4*(0:24);
 i = 1:96;
 P_ld = interp1(t,P_ld,i,'linear');  
 
