@@ -17,7 +17,7 @@ yita_D = 0.85;
 
 % 储能电量上下限
 E_A_max = 100 * Ratio_s;
-E_A_min = 20  * Ratio_s;
+E_A_min = 0  * Ratio_s;
 
 
 %% 储能电量 variables
@@ -26,12 +26,21 @@ E_A = sdpvar(TIME, 1, 'full');
 %% 储能约束
 constraints1 = [];
 
-% (3)
-constraints1 = [constraints1,E_A(1) == 60* Ratio_s];                                     %初始储能
+
+%出力上下限
+
+%电量上下限
+%最后一天的电量要和开始相等
+
+% % (3)
+constraints1 = [constraints1,E_A(1) == 10* Ratio_s];                                     %初始储能
 for i = 2:TIME                                                                  % 充放电导致储能变化
     constraints1 = [constraints1,E_A(i) == E_A(i-1) + ...
-        (yita_C * P_C(i) - P_D(i) / yita_D) * delta_t ];
+        (yita_C * P_C(i-1) - P_D(i-1) / yita_D) * delta_t ];
 end
+    constraints1 = [constraints1,E_A(1) == E_A(TIME) + ...
+        (yita_C * P_C(TIME) - P_D(TIME) / yita_D) * delta_t];
+    
 
 % (1)(2)(4)(5)(6) %储能出力上下限
 for i=1:TIME
@@ -42,7 +51,7 @@ end
 for i = 2:TIME
     constraints1 = [constraints1, E_A_min <= E_A(i) <= E_A_max];
 end 
-    constraints1 = [constraints1, sum(yita_C .* P_C(1:TIME) - ...
-        P_D(1:TIME) ./ yita_D) * delta_t == 0]; %总的充放电为0
+%     constraints1 = [constraints1, sum(yita_C .* P_C(1:TIME) - ...
+%         P_D(1:TIME) ./ yita_D) * delta_t == 0]; %总的充放电为0
 
 % Omega_I = constraints1;

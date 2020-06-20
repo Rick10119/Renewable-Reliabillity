@@ -1,14 +1,14 @@
-clc;
-clear;
-format long
+% clc;
+% clear;
+% format long
 %% 参数设定
 TIME = 96;                                                                  %时段数量(4*24)
-Data_load;                                                                  %调用，读取数据(最高580）
+                                                                 %调用，读取数据(最高580）
 
 Ratio_s = 1; %储能比例
-Ratio_w = 1; %风电比例
-Ratio_p = 1; %光伏比例
-Coefficiency;%新能源参数
+% Ratio_w = 1; %风电比例
+% Ratio_p = 1; %光伏比例
+Data_load; 
 
 %记录约束结果
 P_u_result = [];
@@ -18,6 +18,17 @@ P_D_result = [];
 
 
 %% 变量设置
+date = 210;%九月的某天
+%     WType[1 2 3
+%           4 5 6]
+%        晴天	阴天	雨天
+% 多风（多风，晴天）（多风，阴天）	（多风，雨天）
+% 少风（少风，晴天）（多风，阴天）	（多风，雨天）
+% Kind = 1; %数字对应天气类型
+
+Weather;%天气类型
+
+
 % 风电模型和出力（产生一天的出力上限）
  Wind_power;
 
@@ -46,33 +57,33 @@ Constraints = [Constraints,constraints1];
 for i=1:TIME
     Constraints = [Constraints,0 <= P_w(i) <= P_w_max(i)];              %风电出力约束
     Constraints = [Constraints,0 <= P_p(i) <= P_p_max(i)];              %光伏出力约束
-    Constraints = [Constraints, P_ld(i) + P_C(i)- P_w(i) - P_p(i) - P_u(i) -P_D(i) >=0];%功率平衡
+    Constraints = [Constraints, -P_D(i) + P_ld(i)  + P_C(i)- P_w(i) - P_p(i) - P_u(i) >=0];%功率平衡
 end
 
 %% 目标函数
 
- % 热电厂成本 Z_u
+ % 购电成本 Z_u（$/MWh)
 a_f = 0.015;                                                                      %热电厂成本参数 $/MW2h
 b_f = 20   ;                                                                      % $/MWh
-c_f = 1670;                                                                      % $/h
+c_f = 167;                                                                      % $/h
 Z_u = 0;
 for i=1:TIME
     Z_u = Z_u + P_u(i)^2*a_f+b_f*P_u(i)+c_f;                                      %热电厂成本
 end
 Z_u = Z_u/4;                                                                      %每小时分为了4段
 
-% 储能成本 Z_CD
-PI_C = 10;                                                                      % 充电费用 $/MWh
-PI_D = 40;                                                                      % 放电费用 $/MWh
+% 储能成本 Z_CD（$/MWh)
+PI_C = 5;                                                                      % 充电费用 $/MWh
+PI_D = 5;                                                                      % 放电费用 $/MWh
 Z_CD = (-PI_C*sum(P_C) + PI_D*sum(P_D));                                        % 储能充放电成本
 Z_CD = Z_CD/4;                                                                  % 每小时分为了4段
 
-% 电力不足损失
+% 电力不足损失（$/MWh)
 EDNS_rate=0;
 for i =1 : TIME
     EDNS_rate = EDNS_rate + P_ld(i) + P_C(i)- P_w(i) - P_p(i) - P_u(i) -P_D(i);
 end
-cost = 8760*4*100; %这个成本应该很高
+cost = 8760*4*10000; %这个成本应该很高
 Z_EDNS = EDNS_rate * cost;
 
 Z = Z_u + Z_CD + Z_EDNS;
@@ -83,5 +94,5 @@ optimize(Constraints,Z,ops)
 
 % huatu3;
 % close;
-
+test
 
